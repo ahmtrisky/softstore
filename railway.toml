@@ -1,0 +1,16 @@
+# Railway deployment configuration
+
+[build]
+builder = "nixpacks"
+
+[deploy]
+startCommand = "bun run start"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+# Environment variables needed:
+# DATABASE_URL - PostgreSQL connection string
+# NEXTAUTH_SECRET - Random string for auth
+# NEXTAUTH_URL - Your app URL (https://your-app.railway.app)

@@ -1,0 +1,15 @@
+# Nixpacks configuration for Railway deployment
+
+[phases.setup]
+
+[phases.install]
+cmds = ['bun install']
+
+[phases.build]
+cmds = ['bun run db:generate', 'bun run build']
+
+[start]
+cmd = 'bun run start'
+
+[variables]
+NODE_ENV = 'production'

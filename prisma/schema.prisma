@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ========================================
+// DATABASE CONFIGURATION
+// ========================================
+// Development (local): Uses SQLite (file:./dev.db)
+// Production: Uses PostgreSQL from DATABASE_URL env
+//
+// To switch between databases:
+// 1. For local development: DATABASE_URL="file:./dev.db"
+// 2. For production: DATABASE_URL="postgresql://..."
+// ========================================
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication and role management
+model User {
+  id           String     @id @default(cuid())
+  name         String
+  email        String     @unique
+  password     String     // hashed password
+  role         String     @default("user") // "admin" or "user"
+  avatar       String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  
+  comments     Comment[]
+  articles     Article[]
+  
+  @@index([email])
+  @@index([role])
+}
+
+// Category model for software categorization
+model Category {
+  id          String     @id @default(cuid())
+  name        String
+  slug        String     @unique
+  description String?
+  icon        String?
+  color       String?    // hex color for UI
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  software    Software[]
+  
+  @@index([slug])
+}
+
+// Software model for downloadable software/products
+model Software {
+  id             String     @id @default(cuid())
+  name           String
+  slug           String     @unique
+  description    String     // short description
+  longDescription String?  // detailed description with markdown support
+  version        String
+  fileSize       String     // e.g., "25.4 MB"
+  osSupport      String     // e.g., "Windows 10/11, macOS, Linux"
+  developer      String
+  thumbnail      String?    // URL to thumbnail image
+  screenshots    String?    // JSON array of screenshot URLs
+  filePath       String?    // URL/path to downloadable file
+  downloadCount  Int        @default(0)
+  rating         Float      @default(0)
+  ratingCount    Int        @default(0)
+  isActive       Boolean    @default(true)
+  featured       Boolean    @default(false)
+  categoryId     String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  
+  category       Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  comments       Comment[]
+  
+  @@index([slug])
+  @@index([categoryId])
+  @@index([featured])
+  @@index([isActive])
+}
+
+// Comment model for user reviews and ratings
+model Comment {
+  id          String     @id @default(cuid())
+  userId      String
+  softwareId  String
+  comment     String
+  rating      Int        // 1-5 stars
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  software    Software   @relation(fields: [softwareId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([softwareId])
+}
+
+// Article model for blog posts about software
+model Article {
+  id          String     @id @default(cuid())
+  title       String
+  slug        String     @unique
+  content     String     // Markdown content
+  excerpt     String?    // Short excerpt for preview
+  thumbnail   String?
+  authorId    String
+  published   Boolean    @default(false)
+  viewCount   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  
+  author      User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  
+  @@index([slug])
+  @@index([published])
+  @@index([authorId])
+}
+
+// Setting model for site configuration
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([key])
+}
